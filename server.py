@@ -128,5 +128,16 @@ if __name__ == "__main__":
     print(f"🔧 Tools: clean_price_tool, insert_listing_tool, search_listings_tool")
     print(f"🌐 SSE Endpoint: http://{host}:{port}/sse")
     
-    # FastMCP run() metodu - otomatik olarak uvicorn başlatır
-    mcp.run(transport="sse")
+    # FastMCP run() metodu ile host ve port parametrelerini geçir
+    import uvicorn
+    
+    # FastMCP'nin ASGI app'ini al
+    app = mcp._app  # Internal app object
+    
+    # Uvicorn'u manuel başlat
+    uvicorn.run(
+        app,
+        host=host,
+        port=port,
+        log_level="info"
+    )
