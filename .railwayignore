@@ -1,0 +1,46 @@
+# .railwayignore
+# Railway'de build sırasında görmezden gelinecek dosyalar
+
+# Environment dosyaları (Railway kendi env variables kullanır)
+.env
+.env.local
+.env.example
+*.env
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE ve editor dosyaları
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python geliştirme dosyaları
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Dokümantasyon
+README.md
+docs/
+*.md
+
+# Test dosyaları (isteğe bağlı)
+tests/
+test_*.py
+*_test.py
+
+# Lokal development dosyaları
+.venv/
+venv/
+env/

@@ -1,0 +1,7 @@
+{
+  "reportMissingImports": false,
+  "reportUnknownVariableType": false,
+  "reportUnknownMemberType": false,
+  "reportUntypedFunctionDecorator": false,
+  "reportUnknownArgumentType": false
+}
