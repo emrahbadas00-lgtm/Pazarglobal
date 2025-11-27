@@ -2,6 +2,8 @@
 
 Railway üzerinde çalışan, Supabase ile entegre Model Context Protocol (MCP) server'ı.
 
+🚀 **Status**: Ready for Production
+
 ## 📋 Özellikler
 
 - ✅ **clean_price_tool**: Fiyat metinlerini temizler ve sayısal değere dönüştürür
