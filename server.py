@@ -42,38 +42,38 @@ async def clean_price_tool(price_text: Optional[str]) -> Dict[str, Optional[int]
 
 @mcp.tool()
 async def insert_listing_tool(
-    product_name: str,
-    brand: Optional[str] = None,
+    title: str,
+    price: Optional[int] = None,
     condition: Optional[str] = None,
     category: Optional[str] = None,
     description: Optional[str] = None,
-    original_price_text: Optional[str] = None,
-    clean_price: Optional[int] = None,
+    location: Optional[str] = None,
+    stock: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Yeni ilan ekler (Supabase 'listings' tablosuna).
     
     Args:
-        product_name: Ürün adı (zorunlu)
-        brand: Marka (opsiyonel)
-        condition: Durum (opsiyonel, örn: "Yeni", "İkinci El")
+        title: Ürün başlığı (zorunlu)
+        price: Fiyat (opsiyonel)
+        condition: Durum (opsiyonel, örn: "new", "used")
         category: Kategori (opsiyonel)
         description: Ürün açıklaması (opsiyonel)
-        original_price_text: Orijinal fiyat metni (opsiyonel)
-        clean_price: Temizlenmiş fiyat sayısı (opsiyonel)
+        location: Lokasyon (opsiyonel)
+        stock: Stok adedi (opsiyonel)
         
     Returns:
         Dict içinde success, status ve result/error bilgisi
     """
 
     return await insert_listing_core(
-        product_name=product_name,
-        brand=brand,
+        title=title,
+        price=price,
         condition=condition,
         category=category,
         description=description,
-        original_price_text=original_price_text,
-        clean_price=clean_price,
+        location=location,
+        stock=stock,
     )
 
 
@@ -81,7 +81,8 @@ async def insert_listing_tool(
 async def search_listings_tool(
     query: Optional[str] = None,
     category: Optional[str] = None,
-    brand: Optional[str] = None,
+    condition: Optional[str] = None,
+    location: Optional[str] = None,
     min_price: Optional[int] = None,
     max_price: Optional[int] = None,
     limit: int = 10,
@@ -92,12 +93,13 @@ async def search_listings_tool(
     WhatsApp kullanım örnekleri:
     - "iPhone aramak istiyorum" → query="iPhone"
     - "5000 TL altı laptop" → query="laptop", max_price=5000
-    - "Yeni Samsung telefonlar" → brand="Samsung", query="telefon"
+    - "İstanbul'da yeni telefonlar" → location="İstanbul", condition="new"
     
     Args:
         query: Arama metni (opsiyonel)
         category: Kategori filtresi (opsiyonel)
-        brand: Marka filtresi (opsiyonel)
+        condition: Durum filtresi (opsiyonel, "new" veya "used")
+        location: Lokasyon filtresi (opsiyonel)
         min_price: Minimum fiyat (opsiyonel)
         max_price: Maximum fiyat (opsiyonel)
         limit: Sonuç sayısı (default: 10)
@@ -108,7 +110,8 @@ async def search_listings_tool(
     return await search_listings_core(
         query=query,
         category=category,
-        brand=brand,
+        condition=condition,
+        location=location,
         min_price=min_price,
         max_price=max_price,
         limit=limit,
@@ -121,10 +124,8 @@ if __name__ == "__main__":
     host = os.getenv("HOST", "0.0.0.0")
     
     print(f"🚀 Pazarglobal MCP Server başlatılıyor...")
-    print(f"📡 Host: {host}")
-    print(f"📡 Port: {port}")
+    print(f"📡 Host: {host}:{port}")
     print(f"🔧 Tools: clean_price_tool, insert_listing_tool, search_listings_tool")
-    print(f"🌐 Transport: SSE (Server-Sent Events)")
     
-    # FastMCP server'ı SSE ile çalıştır (Railway/uzak server için)
-    mcp.run(transport="sse", host=host, port=port)  # type: ignore
+    # FastMCP basit kullanım - default SSE transport
+    mcp.run()  # type: ignore

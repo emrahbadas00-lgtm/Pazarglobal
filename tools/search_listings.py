@@ -1,7 +1,7 @@
 # tools/search_listings.py
 
 import os
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional
 
 import httpx
 
@@ -13,7 +13,8 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 async def search_listings(
     query: Optional[str] = None,
     category: Optional[str] = None,
-    brand: Optional[str] = None,
+    condition: Optional[str] = None,
+    location: Optional[str] = None,
     min_price: Optional[int] = None,
     max_price: Optional[int] = None,
     limit: int = 10,
@@ -23,9 +24,10 @@ async def search_listings(
     WhatsApp'tan: "iPhone aramak istiyorum" → query="iPhone"
     
     Args:
-        query: Arama metni (product_name içinde ara)
+        query: Arama metni (title içinde ara)
         category: Kategori filtresi
-        brand: Marka filtresi
+        condition: Durum filtresi ("new", "used")
+        location: Lokasyon filtresi
         min_price: Minimum fiyat
         max_price: Maximum fiyat
         limit: Sonuç sayısı (default: 10)
@@ -43,30 +45,31 @@ async def search_listings(
     url = f"{SUPABASE_URL}/rest/v1/listings"
     
     # Supabase query parametreleri
-    params: Dict[str, Any] = {"limit": limit, "order": "created_at.desc"}
+    params: Dict[str, str] = {"limit": str(limit), "order": "created_at.desc"}
     
-    # Filtreler
-    filters: List[str] = []
-    
+    # Filtreler - Supabase PostgREST syntax
     if query:
-        # product_name veya description içinde ara (case-insensitive)
-        filters.append(f"or=(product_name.ilike.*{query}*,description.ilike.*{query}*)")
+        # title veya description içinde ara (case-insensitive)
+        params["or"] = f"(title.ilike.*{query}*,description.ilike.*{query}*)"
     
     if category:
-        filters.append(f"category=eq.{category}")
+        params["category"] = f"eq.{category}"
     
-    if brand:
-        filters.append(f"brand=eq.{brand}")
+    if condition:
+        params["condition"] = f"eq.{condition}"
+    
+    if location:
+        params["location"] = f"eq.{location}"
     
     if min_price is not None:
-        filters.append(f"clean_price=gte.{min_price}")
+        params["price"] = f"gte.{min_price}"
     
     if max_price is not None:
-        filters.append(f"clean_price=lte.{max_price}")
-    
-    # Filtreleri URL'e ekle
-    if filters:
-        params.update({f"filter_{i}": f for i, f in enumerate(filters)})
+        if "price" in params:
+            # Hem min hem max varsa
+            params["price"] = f"gte.{min_price}&price=lte.{max_price}"
+        else:
+            params["price"] = f"lte.{max_price}"
 
     headers = {
         "apikey": SUPABASE_SERVICE_KEY,

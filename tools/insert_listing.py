@@ -11,26 +11,25 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
 
 async def insert_listing(
-    product_name: str,
-    brand: Optional[str] = None,
+    title: str,
+    price: Optional[int] = None,
     condition: Optional[str] = None,
     category: Optional[str] = None,
     description: Optional[str] = None,
-    original_price_text: Optional[str] = None,
-    clean_price: Optional[int] = None,
+    location: Optional[str] = None,
+    stock: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
-    JS'deki insertListing ile aynı işi yapar:
     Supabase REST API üzerinden 'listings' tablosuna kayıt ekler.
     
     Args:
-        product_name: Ürün adı (zorunlu)
-        brand: Marka
-        condition: Durum (örn: "Yeni", "İkinci El")
+        title: Ürün başlığı (zorunlu)
+        price: Fiyat (sayısal)
+        condition: Durum (örn: "new", "used")
         category: Kategori
         description: Açıklama
-        original_price_text: Orijinal fiyat metni
-        clean_price: Temizlenmiş fiyat (sayısal)
+        location: Lokasyon
+        stock: Stok adedi
         
     Returns:
         Dict içinde success, status ve result anahtarları
@@ -47,13 +46,14 @@ async def insert_listing(
     url = f"{SUPABASE_URL}/rest/v1/listings"
 
     payload: Dict[str, Any] = {
-        "product_name": product_name,
-        "brand": brand,
+        "title": title,
+        "price": price,
         "condition": condition,
         "category": category,
         "description": description,
-        "original_price_text": original_price_text,
-        "clean_price": clean_price,
+        "location": location,
+        "stock": stock,
+        "status": "active",
     }
 
     headers = {
