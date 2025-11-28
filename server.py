@@ -123,14 +123,21 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     host = os.getenv("HOST", "0.0.0.0")
     
-    # Environment variable olarak PORT ve HOST'u set et
-    os.environ["MCP_HOST"] = host
-    os.environ["MCP_PORT"] = str(port)
-    
     print(f"🚀 Pazarglobal MCP Server başlatılıyor...")
     print(f"📡 Host: {host}:{port}")
     print(f"🔧 Tools: clean_price_tool, insert_listing_tool, search_listings_tool")
     print(f"🌐 SSE Endpoint: http://{host}:{port}/sse")
     
-    # FastMCP run() metodu - environment variables'ı kullanacak
-    mcp.run(transport="sse", host=host, port=port)
+    # FastMCP'nin SSE ASGI app'ini al ve uvicorn ile başlat
+    import uvicorn
+    
+    # sse_app() metodu ASGI application döner
+    app = mcp.sse_app()
+    
+    # Uvicorn'u manuel başlat - host ve port kontrolü bizde
+    uvicorn.run(
+        app,
+        host=host,
+        port=port,
+        log_level="info"
+    )
