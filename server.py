@@ -37,7 +37,10 @@ async def clean_price_tool(price_text: Optional[str]) -> Dict[str, Optional[int]
     Returns:
         Temizlenmiş fiyat değeri (int veya None)
     """
-    return clean_price_core(price_text)
+    print(f"🔧 clean_price_tool called with: {price_text}")
+    result = clean_price_core(price_text)
+    print(f"✅ clean_price_tool result: {result}")
+    return result
 
 
 @mcp.tool()
@@ -65,8 +68,9 @@ async def insert_listing_tool(
     Returns:
         Dict içinde success, status ve result/error bilgisi
     """
-
-    return await insert_listing_core(
+    print(f"🔧 insert_listing_tool called with: title={title}, price={price}, condition={condition}, category={category}, location={location}")
+    
+    result = await insert_listing_core(
         title=title,
         price=price,
         condition=condition,
@@ -75,6 +79,9 @@ async def insert_listing_tool(
         location=location,
         stock=stock,
     )
+    
+    print(f"✅ insert_listing_tool result: {result}")
+    return result
 
 
 @mcp.tool()
@@ -128,13 +135,28 @@ if __name__ == "__main__":
     print(f"🔧 Tools: clean_price_tool, insert_listing_tool, search_listings_tool")
     print(f"🌐 SSE Endpoint: http://{host}:{port}/sse")
     
-    # FastMCP'nin SSE ASGI app'ini al ve uvicorn ile başlat
+    # FastMCP'nin SSE ASGI app'ini al
     import uvicorn
+    from starlette.applications import Starlette
+    from starlette.responses import RedirectResponse
+    from starlette.routing import Route, Mount
     
-    # sse_app() metodu ASGI application döner
-    app = mcp.sse_app()
+    # FastMCP SSE app'i
+    mcp_app = mcp.sse_app()
     
-    # Uvicorn'u manuel başlat - host ve port kontrolü bizde
+    # POST /sse için redirect handler
+    async def sse_post_redirect(request):
+        return RedirectResponse(url="/sse", status_code=307)
+    
+    # Starlette app oluştur - POST ve GET destekli
+    app = Starlette(
+        routes=[
+            Route("/sse", endpoint=sse_post_redirect, methods=["POST"]),
+            Mount("/", app=mcp_app),
+        ]
+    )
+    
+    # Uvicorn'u manuel başlat
     uvicorn.run(
         app,
         host=host,
