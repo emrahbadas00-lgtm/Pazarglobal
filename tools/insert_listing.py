@@ -64,8 +64,13 @@ async def insert_listing(
     }
 
     try:
-        async with httpx.AsyncClient(timeout=20.0) as client:
+        print(f"📡 Attempting POST to: {url}")
+        print(f"📦 Payload: {payload}")
+        
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             resp = await client.post(url, json=payload, headers=headers)
+        
+        print(f"✅ Response status: {resp.status_code}")
 
         data = None
         try:
@@ -78,15 +83,26 @@ async def insert_listing(
             "status": resp.status_code,
             "result": data,
         }
-    except httpx.TimeoutException:
+    except httpx.TimeoutException as e:
+        print(f"⏱️ Timeout error: {str(e)}")
         return {
             "success": False,
             "status": 408,
-            "error": "Request timeout - Supabase bağlantısı zaman aşımına uğradı",
+            "error": f"Request timeout - Supabase bağlantısı zaman aşımına uğradı: {str(e)}",
+        }
+    except httpx.ConnectError as e:
+        print(f"🔌 Connection error: {str(e)}")
+        return {
+            "success": False,
+            "status": 503,
+            "error": f"Supabase bağlantısı kurulamadı: {str(e)}",
         }
     except Exception as e:
+        print(f"❌ Unexpected error: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {
             "success": False,
             "status": 500,
-            "error": f"Beklenmeyen hata: {str(e)}",
+            "error": f"Beklenmeyen hata ({type(e).__name__}): {str(e)}",
         }
