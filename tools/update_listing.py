@@ -1,0 +1,126 @@
+"""
+Update an existing listing in Supabase
+"""
+import os
+import httpx
+from typing import Optional
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+
+async def update_listing(
+    listing_id: str,
+    title: Optional[str] = None,
+    price: Optional[int] = None,
+    condition: Optional[str] = None,
+    category: Optional[str] = None,
+    description: Optional[str] = None,
+    location: Optional[str] = None,
+    stock: Optional[int] = None,
+    status: Optional[str] = None
+) -> dict:
+    """
+    Update an existing listing in Supabase by listing_id.
+    Only provided fields will be updated (partial update).
+    
+    Args:
+        listing_id: UUID of the listing to update
+        title: Updated title (optional)
+        price: Updated price in TL (optional)
+        condition: Updated condition: 'yeni', 'sıfır', 'az kullanılmış', 'kullanılmış' (optional)
+        category: Updated category: 'elektronik', 'ev', 'moda', 'spor', etc. (optional)
+        description: Updated description (optional)
+        location: Updated location (optional)
+        stock: Updated stock quantity (optional)
+        status: Updated status: 'draft', 'active', 'sold', 'inactive' (optional)
+    
+    Returns:
+        dict with:
+            - success: bool
+            - status_code: int (HTTP status)
+            - result: updated listing object (if success)
+            - error: error message (if failed)
+    """
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return {
+            "success": False,
+            "status_code": 500,
+            "error": "SUPABASE_URL or SUPABASE_SERVICE_KEY not configured"
+        }
+    
+    # Build payload with only provided fields
+    payload = {}
+    if title is not None:
+        payload["title"] = title
+    if price is not None:
+        payload["price"] = price
+    if condition is not None:
+        payload["condition"] = condition
+    if category is not None:
+        payload["category"] = category
+    if description is not None:
+        payload["description"] = description
+    if location is not None:
+        payload["location"] = location
+    if stock is not None:
+        payload["stock"] = stock
+    if status is not None:
+        payload["status"] = status
+    
+    if not payload:
+        return {
+            "success": False,
+            "status_code": 400,
+            "error": "No fields provided to update"
+        }
+    
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+    }
+    
+    url = f"{SUPABASE_URL}/rest/v1/listings"
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+            # Supabase update with filter: PATCH /listings?id=eq.{listing_id}
+            response = await client.patch(
+                f"{url}?id=eq.{listing_id}",
+                json=payload,
+                headers=headers
+            )
+            
+            if response.status_code in [200, 201, 204]:
+                result = response.json() if response.text else {"listing_id": listing_id}
+                return {
+                    "success": True,
+                    "status_code": response.status_code,
+                    "result": result if result else {"listing_id": listing_id, "updated": True}
+                }
+            else:
+                return {
+                    "success": False,
+                    "status_code": response.status_code,
+                    "error": f"Supabase error: {response.text}"
+                }
+                
+    except httpx.ConnectError as e:
+        return {
+            "success": False,
+            "status_code": 503,
+            "error": f"Connection error: {str(e)}"
+        }
+    except httpx.TimeoutException:
+        return {
+            "success": False,
+            "status_code": 504,
+            "error": "Request timeout"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "status_code": 500,
+            "error": f"Unexpected error: {str(e)}"
+        }

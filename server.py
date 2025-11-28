@@ -12,6 +12,9 @@ except ImportError:
 from tools.clean_price import clean_price as clean_price_core
 from tools.insert_listing import insert_listing as insert_listing_core
 from tools.search_listings import search_listings as search_listings_core
+from tools.update_listing import update_listing as update_listing_core
+from tools.delete_listing import delete_listing as delete_listing_core
+from tools.list_user_listings import list_user_listings as list_user_listings_core
 
 
 # FastMCP instance oluştur
@@ -125,6 +128,117 @@ async def search_listings_tool(
     )
 
 
+@mcp.tool()
+async def update_listing_tool(
+    listing_id: str,
+    title: Optional[str] = None,
+    price: Optional[int] = None,
+    condition: Optional[str] = None,
+    category: Optional[str] = None,
+    description: Optional[str] = None,
+    location: Optional[str] = None,
+    stock: Optional[int] = None,
+    status: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Mevcut bir ilanı günceller.
+    
+    WhatsApp kullanım örnekleri:
+    - "ilanımın fiyatını 22 bin yap" → update_listing_tool(listing_id="...", price=22000)
+    - "açıklamasını değiştir" → update_listing_tool(listing_id="...", description="...")
+    - "durumunu satıldı yap" → update_listing_tool(listing_id="...", status="sold")
+    
+    Args:
+        listing_id: Güncellenecek ilanın UUID'si (zorunlu)
+        title: Yeni başlık (opsiyonel)
+        price: Yeni fiyat (opsiyonel)
+        condition: Yeni durum (opsiyonel)
+        category: Yeni kategori (opsiyonel)
+        description: Yeni açıklama (opsiyonel)
+        location: Yeni lokasyon (opsiyonel)
+        stock: Yeni stok (opsiyonel)
+        status: Yeni durum - draft/active/sold/inactive (opsiyonel)
+        
+    Returns:
+        success, status_code, result/error
+    """
+    print(f"🔧 update_listing_tool called for listing_id={listing_id}")
+    
+    result = await update_listing_core(
+        listing_id=listing_id,
+        title=title,
+        price=price,
+        condition=condition,
+        category=category,
+        description=description,
+        location=location,
+        stock=stock,
+        status=status,
+    )
+    
+    print(f"✅ update_listing_tool result: {result}")
+    return result
+
+
+@mcp.tool()
+async def delete_listing_tool(listing_id: str) -> Dict[str, Any]:
+    """
+    Bir ilanı siler.
+    
+    WhatsApp kullanım örnekleri:
+    - "iPhone ilanımı sil"
+    - "bu ilanı kaldır"
+    
+    Args:
+        listing_id: Silinecek ilanın UUID'si
+        
+    Returns:
+        success, status_code, message/error
+    """
+    print(f"🔧 delete_listing_tool called for listing_id={listing_id}")
+    
+    result = await delete_listing_core(listing_id=listing_id)
+    
+    print(f"✅ delete_listing_tool result: {result}")
+    return result
+
+
+@mcp.tool()
+async def list_user_listings_tool(
+    user_id: str,
+    status: Optional[str] = None,
+    limit: int = 50,
+) -> Dict[str, Any]:
+    """
+    Kullanıcının tüm ilanlarını listeler.
+    
+    Update ve delete işlemleri için önce bu tool ile kullanıcının ilanlarını listele,
+    sonra kullanıcıya seçim yaptır.
+    
+    WhatsApp kullanım örnekleri:
+    - "ilanlarımı göster" → list_user_listings_tool(user_id="phone_number")
+    - "satılanları listele" → list_user_listings_tool(user_id="...", status="sold")
+    
+    Args:
+        user_id: Kullanıcı ID'si (telefon numarası veya UUID)
+        status: İlan durumu filtresi - draft/active/sold/inactive (opsiyonel)
+        limit: Maksimum sonuç sayısı (default: 50)
+        
+    Returns:
+        success, status_code, listings, count
+    """
+    print(f"🔧 list_user_listings_tool called for user_id={user_id}, status={status}")
+    
+    result = await list_user_listings_core(
+        user_id=user_id,
+        status=status,
+        limit=limit,
+    )
+    
+    print(f"✅ list_user_listings_tool result: {result}")
+    return result
+
+
 if __name__ == "__main__":
     # Railway PORT değişkenini dinle, yoksa 8000 kullan
     port = int(os.getenv("PORT", 8000))
@@ -132,7 +246,7 @@ if __name__ == "__main__":
     
     print(f"🚀 Pazarglobal MCP Server başlatılıyor...")
     print(f"📡 Host: {host}:{port}")
-    print(f"🔧 Tools: clean_price_tool, insert_listing_tool, search_listings_tool")
+    print(f"🔧 Tools: clean_price_tool, insert_listing_tool, search_listings_tool, update_listing_tool, delete_listing_tool, list_user_listings_tool")
     print(f"🌐 SSE Endpoint: http://{host}:{port}/sse")
     
     # FastMCP'nin SSE ASGI app'ini al
