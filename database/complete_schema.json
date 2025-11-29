@@ -1,0 +1,67 @@
+{
+  "conversations": {
+    "status": "success",
+    "total_rows": "0",
+    "columns": [],
+    "sample_data": []
+  },
+  "listings": {
+    "status": "error",
+    "error": "HTTP 206",
+    "message": "[{\"id\":\"6164cb9a-48a2-43ce-b895-4c37c1cf9e84\",\"user_id\":\"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11\",\"title\":\"Brembo Fren Diski Rotor - Ön\",\"description\":\"Brembo marka yeni ön fren diski. Tüm araçlara uyuml"
+  },
+  "notifications": {
+    "status": "success",
+    "total_rows": "0",
+    "columns": [],
+    "sample_data": []
+  },
+  "orders": {
+    "status": "success",
+    "total_rows": "1",
+    "columns": [
+      "id",
+      "listing_id",
+      "buyer_id",
+      "seller_id",
+      "price",
+      "commission",
+      "status",
+      "created_at",
+      "completed_at",
+      "quantity",
+      "seller_receives"
+    ],
+    "sample_data": [
+      {
+        "id": "34e69a0d-bd69-43e4-a304-6121441dee0f",
+        "listing_id": "a39848b7-5fe4-420e-9f3b-fe11a2e9644d",
+        "buyer_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        "seller_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        "price": 4500.0,
+        "commission": 112.5,
+        "status": "pending",
+        "created_at": "2025-11-17T22:02:25.152637",
+        "completed_at": null,
+        "quantity": 1,
+        "seller_receives": 4387.5
+      }
+    ]
+  },
+  "product_embeddings": {
+    "status": "error",
+    "error": "HTTP 206",
+    "message": "[{\"id\":\"29e8f063-2545-4dc7-8580-0318c393abd9\",\"listing_id\":\"6164cb9a-48a2-43ce-b895-4c37c1cf9e84\",\"embedding\":\"[0.01689313,0.002939349,-0.041940283,0.007169597,-0.009649237,0.021638809,-0.025687959,0."
+  },
+  "product_images": {
+    "status": "success",
+    "total_rows": "0",
+    "columns": [],
+    "sample_data": []
+  },
+  "users": {
+    "status": "error",
+    "error": "HTTP 206",
+    "message": "[{\"id\":\"b54800be-71b8-4005-b797-866d8c21664c\",\"phone\":\"test-whatsapp-456\",\"name\":\"Test WhatsApp User\",\"email\":null,\"location\":null,\"created_at\":\"2025-11-23T15:14:19.468201\",\"updated_at\":\"2025-11-23T15"
+  }
+}
