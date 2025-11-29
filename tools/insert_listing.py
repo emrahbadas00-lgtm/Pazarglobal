@@ -12,6 +12,7 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
 async def insert_listing(
     title: str,
+    user_id: str = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",  # Default test user for development
     price: Optional[int] = None,
     condition: Optional[str] = None,
     category: Optional[str] = None,
@@ -24,6 +25,7 @@ async def insert_listing(
     
     Args:
         title: Ürün başlığı (zorunlu)
+        user_id: Kullanıcı UUID (WhatsApp entegrasyonunda otomatik gelecek)
         price: Fiyat (sayısal)
         condition: Durum (örn: "new", "used")
         category: Kategori
@@ -46,6 +48,7 @@ async def insert_listing(
     url = f"{SUPABASE_URL}/rest/v1/listings"
 
     payload: Dict[str, Any] = {
+        "user_id": user_id,
         "title": title,
         "price": price,
         "condition": condition,

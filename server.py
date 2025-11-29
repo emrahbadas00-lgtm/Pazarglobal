@@ -49,6 +49,7 @@ async def clean_price_tool(price_text: Optional[str]) -> Dict[str, Optional[int]
 @mcp.tool()
 async def insert_listing_tool(
     title: str,
+    user_id: str = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
     price: Optional[int] = None,
     condition: Optional[str] = None,
     category: Optional[str] = None,
@@ -61,6 +62,7 @@ async def insert_listing_tool(
     
     Args:
         title: Ürün başlığı (zorunlu)
+        user_id: Kullanıcı UUID (WhatsApp entegrasyonunda otomatik gelecek)
         price: Fiyat (opsiyonel)
         condition: Durum (opsiyonel, örn: "new", "used")
         category: Kategori (opsiyonel)
@@ -71,10 +73,11 @@ async def insert_listing_tool(
     Returns:
         Dict içinde success, status ve result/error bilgisi
     """
-    print(f"🔧 insert_listing_tool called with: title={title}, price={price}, condition={condition}, category={category}, location={location}")
+    print(f"🔧 insert_listing_tool called with: title={title}, user_id={user_id}, price={price}, condition={condition}, category={category}, location={location}")
     
     result = await insert_listing_core(
         title=title,
+        user_id=user_id,
         price=price,
         condition=condition,
         category=category,
@@ -131,6 +134,7 @@ async def search_listings_tool(
 @mcp.tool()
 async def update_listing_tool(
     listing_id: str,
+    user_id: str = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
     title: Optional[str] = None,
     price: Optional[int] = None,
     condition: Optional[str] = None,
@@ -150,6 +154,7 @@ async def update_listing_tool(
     
     Args:
         listing_id: Güncellenecek ilanın UUID'si (zorunlu)
+        user_id: Kullanıcı UUID (RLS validation için, WhatsApp phase'de aktif olacak)
         title: Yeni başlık (opsiyonel)
         price: Yeni fiyat (opsiyonel)
         condition: Yeni durum (opsiyonel)
@@ -162,10 +167,11 @@ async def update_listing_tool(
     Returns:
         success, status_code, result/error
     """
-    print(f"🔧 update_listing_tool called for listing_id={listing_id}")
+    print(f"🔧 update_listing_tool called for listing_id={listing_id}, user_id={user_id}")
     
     result = await update_listing_core(
         listing_id=listing_id,
+        user_id=user_id,
         title=title,
         price=price,
         condition=condition,

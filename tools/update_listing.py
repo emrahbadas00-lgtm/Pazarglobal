@@ -10,6 +10,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
 async def update_listing(
     listing_id: str,
+    user_id: str = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",  # For RLS validation (future)
     title: Optional[str] = None,
     price: Optional[int] = None,
     condition: Optional[str] = None,
@@ -25,6 +26,7 @@ async def update_listing(
     
     Args:
         listing_id: UUID of the listing to update
+        user_id: Kullanıcı UUID (RLS validation için, WhatsApp phase'de aktif olacak)
         title: Updated title (optional)
         price: Updated price in TL (optional)
         condition: Updated condition: 'yeni', 'sıfır', 'az kullanılmış', 'kullanılmış' (optional)
