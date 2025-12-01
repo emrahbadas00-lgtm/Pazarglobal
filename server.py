@@ -65,6 +65,7 @@ async def insert_listing_tool(
     description: Optional[str] = None,
     location: Optional[str] = None,
     stock: Optional[int] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Yeni ilan ekler (Supabase 'listings' tablosuna).
@@ -78,11 +79,12 @@ async def insert_listing_tool(
         description: Ürün açıklaması (opsiyonel)
         location: Lokasyon (opsiyonel)
         stock: Stok adedi (opsiyonel)
+        metadata: JSONB metadata - örn: {"type": "vehicle", "brand": "BMW", "model": "320i", "year": 2018}
         
     Returns:
         Dict içinde success, status ve result/error bilgisi
     """
-    print(f"🔧 insert_listing_tool called with: title={title}, user_id={user_id}, price={price}, condition={condition}, category={category}, location={location}")
+    print(f"🔧 insert_listing_tool called with: title={title}, user_id={user_id}, price={price}, condition={condition}, category={category}, location={location}, metadata={metadata}")
     
     result = await insert_listing_core(
         title=title,
@@ -93,6 +95,7 @@ async def insert_listing_tool(
         description=description,
         location=location,
         stock=stock,
+        metadata=metadata,
     )
     
     print(f"✅ insert_listing_tool result: {result}")
@@ -157,6 +160,7 @@ async def update_listing_tool(
     location: Optional[str] = None,
     stock: Optional[int] = None,
     status: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Mevcut bir ilanı günceller.
@@ -165,6 +169,7 @@ async def update_listing_tool(
     - "ilanımın fiyatını 22 bin yap" → update_listing_tool(listing_id="...", price=22000)
     - "açıklamasını değiştir" → update_listing_tool(listing_id="...", description="...")
     - "durumunu satıldı yap" → update_listing_tool(listing_id="...", status="sold")
+    - "metadata güncelle" → update_listing_tool(listing_id="...", metadata={"type": "vehicle", "brand": "BMW"})
     
     Args:
         listing_id: Güncellenecek ilanın UUID'si (zorunlu)
@@ -177,11 +182,12 @@ async def update_listing_tool(
         location: Yeni lokasyon (opsiyonel)
         stock: Yeni stok (opsiyonel)
         status: Yeni durum - draft/active/sold/inactive (opsiyonel)
+        metadata: Yeni metadata - {"type": "vehicle", "brand": "BMW", ...} (opsiyonel)
         
     Returns:
         success, status_code, result/error
     """
-    print(f"🔧 update_listing_tool called for listing_id={listing_id}, user_id={user_id}")
+    print(f"🔧 update_listing_tool called for listing_id={listing_id}, user_id={user_id}, metadata={metadata}")
     
     result = await update_listing_core(
         listing_id=listing_id,
@@ -194,6 +200,7 @@ async def update_listing_tool(
         location=location,
         stock=stock,
         status=status,
+        metadata=metadata,
     )
     
     print(f"✅ update_listing_tool result: {result}")

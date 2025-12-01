@@ -18,7 +18,8 @@ async def update_listing(
     description: Optional[str] = None,
     location: Optional[str] = None,
     stock: Optional[int] = None,
-    status: Optional[str] = None
+    status: Optional[str] = None,
+    metadata: Optional[dict] = None,
 ) -> dict:
     """
     Update an existing listing in Supabase by listing_id.
@@ -35,6 +36,7 @@ async def update_listing(
         location: Updated location (optional)
         stock: Updated stock quantity (optional)
         status: Updated status: 'draft', 'active', 'sold', 'inactive' (optional)
+        metadata: JSONB metadata (type, brand, model, year, etc.) (optional)
     
     Returns:
         dict with:
@@ -68,6 +70,8 @@ async def update_listing(
         payload["stock"] = stock
     if status is not None:
         payload["status"] = status
+    if metadata is not None:
+        payload["metadata"] = metadata
     
     if not payload:
         return {

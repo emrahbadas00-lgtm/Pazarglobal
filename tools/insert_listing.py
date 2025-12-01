@@ -19,6 +19,7 @@ async def insert_listing(
     description: Optional[str] = None,
     location: Optional[str] = None,
     stock: Optional[int] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Supabase REST API üzerinden 'listings' tablosuna kayıt ekler.
@@ -32,6 +33,7 @@ async def insert_listing(
         description: Açıklama
         location: Lokasyon
         stock: Stok adedi
+        metadata: JSONB metadata (type, brand, model, year, etc.)
         
     Returns:
         Dict içinde success, status ve result anahtarları
@@ -57,6 +59,7 @@ async def insert_listing(
         "location": location,
         "stock": stock,
         "status": "active",
+        "metadata": metadata,
     }
 
     headers = {
