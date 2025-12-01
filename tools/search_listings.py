@@ -49,8 +49,21 @@ async def search_listings(
     
     # Filtreler - Supabase PostgREST syntax
     if query:
-        # title veya description içinde ara (case-insensitive)
-        params["or"] = f"(title.ilike.*{query}*,description.ilike.*{query}*)"
+        # Synonym expansion for generic terms
+        query_lower = query.lower()
+        
+        # "araba" / "otomobil" → expand to popular car brands
+        if query_lower in ["araba", "otomobil", "araç", "oto"]:
+            # Search for common car-related terms in title/description
+            car_terms = ["clio", "focus", "golf", "corolla", "civic", "megane", "polo", "fiesta", "astra"]
+            or_conditions = []
+            for term in car_terms:
+                or_conditions.append(f"title.ilike.*{term}*")
+                or_conditions.append(f"description.ilike.*{term}*")
+            params["or"] = f"({','.join(or_conditions)})"
+        else:
+            # Normal search: title veya description içinde ara (case-insensitive)
+            params["or"] = f"(title.ilike.*{query}*,description.ilike.*{query}*)"
     
     if category:
         params["category"] = f"eq.{category}"
