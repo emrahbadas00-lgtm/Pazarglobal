@@ -108,6 +108,7 @@ async def search_listings_tool(
     min_price: Optional[int] = None,
     max_price: Optional[int] = None,
     limit: int = 10,
+    metadata_type: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Supabase'den ilan arar.
@@ -116,6 +117,8 @@ async def search_listings_tool(
     - "iPhone aramak istiyorum" → query="iPhone"
     - "5000 TL altı laptop" → query="laptop", max_price=5000
     - "İstanbul'da yeni telefonlar" → location="İstanbul", condition="new"
+    - "araba var mı" → category="Otomotiv", metadata_type="vehicle"
+    - "otomotiv yedek parçası" → category="Otomotiv", metadata_type="part"
     
     Args:
         query: Arama metni (opsiyonel)
@@ -125,6 +128,7 @@ async def search_listings_tool(
         min_price: Minimum fiyat (opsiyonel)
         max_price: Maximum fiyat (opsiyonel)
         limit: Sonuç sayısı (default: 10)
+        metadata_type: Tip filtresi - "vehicle", "part", "accessory" (opsiyonel)
         
     Returns:
         Bulunan ilanların listesi
@@ -137,6 +141,7 @@ async def search_listings_tool(
         min_price=min_price,
         max_price=max_price,
         limit=limit,
+        metadata_type=metadata_type,
     )
 
 

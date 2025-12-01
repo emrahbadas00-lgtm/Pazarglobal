@@ -18,6 +18,7 @@ async def search_listings(
     min_price: Optional[int] = None,
     max_price: Optional[int] = None,
     limit: int = 10,
+    metadata_type: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Supabase'den ilan arama.
@@ -31,6 +32,7 @@ async def search_listings(
         min_price: Minimum fiyat
         max_price: Maximum fiyat
         limit: Sonuç sayısı (default: 10)
+        metadata_type: Metadata type filter ("vehicle", "part", "accessory")
         
     Returns:
         İlan listesi veya hata mesajı
@@ -82,6 +84,10 @@ async def search_listings(
             params["price"] = f"gte.{min_price}&price=lte.{max_price}"
         else:
             params["price"] = f"lte.{max_price}"
+    
+    if metadata_type:
+        # Filter by metadata->type field (JSONB query)
+        params["metadata->>type"] = f"eq.{metadata_type}"
 
     headers = {
         "apikey": SUPABASE_SERVICE_KEY,
