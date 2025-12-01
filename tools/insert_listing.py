@@ -46,6 +46,14 @@ async def insert_listing(
             "status": 500,
             "error": "SUPABASE_URL veya SUPABASE_SERVICE_KEY tanımlı değil",
         }
+    
+    # VALIDATION: Ensure user_id is a valid UUID, use default if not
+    # This handles cases where agents pass phone numbers or invalid strings
+    import re
+    uuid_pattern = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$', re.IGNORECASE)
+    if not uuid_pattern.match(user_id):
+        print(f"⚠️ Invalid user_id '{user_id}', using default test UUID")
+        user_id = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
 
     url = f"{SUPABASE_URL}/rest/v1/listings"
 
