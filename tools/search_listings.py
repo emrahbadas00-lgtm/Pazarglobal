@@ -47,7 +47,11 @@ async def search_listings(
     url = f"{SUPABASE_URL}/rest/v1/listings"
     
     # Supabase query parametreleri
-    params: Dict[str, str] = {"limit": str(limit), "order": "created_at.desc"}
+    params: Dict[str, str] = {
+        "limit": str(limit), 
+        "order": "created_at.desc",
+        "status": "eq.active"  # Default: Only show active listings
+    }
     
     # Filtreler - Supabase PostgREST syntax
     if query:
