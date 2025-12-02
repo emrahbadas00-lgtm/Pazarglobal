@@ -84,7 +84,8 @@ async def search_listings(
         params["condition"] = f"eq.{condition}"
     
     if location:
-        params["location"] = f"eq.{location}"
+        # Use ilike for partial match (e.g., "Bursa" matches "Bursa / Nilüfer, 23 Nisan...")
+        params["location"] = f"ilike.*{location}*"
     
     if min_price is not None:
         params["price"] = f"gte.{min_price}"
@@ -105,8 +106,14 @@ async def search_listings(
         params["metadata->>room_count"] = f"eq.{room_count}"
     
     if property_type:
-        # Filter by metadata->property_type field (case-insensitive)
-        params["metadata->>property_type"] = f"ilike.{property_type}"
+        # Search in BOTH metadata AND title/description (some listings have type in title, not metadata)
+        # Example: "Dubleks" in title but property_type="daire" in metadata
+        if query:
+            # If query exists, combine with OR
+            params["or"] = f"(title.ilike.*{property_type}*,description.ilike.*{property_type}*,metadata->>property_type.ilike.*{property_type}*)" + "," + params.get("or", "")
+        else:
+            # No query, just search property_type in title, description, and metadata
+            params["or"] = f"(title.ilike.*{property_type}*,description.ilike.*{property_type}*,metadata->>property_type.ilike.*{property_type}*)"
 
     headers = {
         "apikey": SUPABASE_SERVICE_KEY,
