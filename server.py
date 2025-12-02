@@ -419,13 +419,8 @@ if __name__ == "__main__":
     # print(f"🔐 Security Tools: verify_pin, check_session, check_rate_limit, log_audit, register_user_pin, get_user_by_phone")
     print(f"🌐 SSE Endpoint: http://{host}:{port}/sse")
     
-    # FastMCP'nin SSE ASGI app'ini al
+    # FastMCP SSE app'i - doğrudan kullan (Starlette wrapper gerekmez)
     import uvicorn
-    from starlette.applications import Starlette
-    from starlette.responses import RedirectResponse
-    from starlette.routing import Route, Mount
-    
-    # FastMCP SSE app'i - doğrudan kullan
     mcp_app = mcp.sse_app()
     
     # Uvicorn'u doğrudan FastMCP app ile başlat
