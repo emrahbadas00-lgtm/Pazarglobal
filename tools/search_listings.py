@@ -77,8 +77,9 @@ async def search_listings(
             params["or"] = f"(title.ilike.*{query}*,description.ilike.*{query}*,category.ilike.*{query}*,location.ilike.*{query}*)"
     
     if category:
-        # Category normalization - case insensitive match
-        params["category"] = f"ilike.{category}"
+        # Category normalization - case insensitive partial match
+        # Example: "Emlak" matches "Emlak – Kiralık Daire"
+        params["category"] = f"ilike.*{category}*"
     
     if condition:
         params["condition"] = f"eq.{condition}"
