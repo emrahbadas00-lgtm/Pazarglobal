@@ -54,16 +54,19 @@ async def search_listings(
         # Synonym expansion for generic terms
         query_lower = query.lower()
         
-        # "araba" / "otomobil" → DON'T expand brands, use category filter instead
-        # Let agent handle category search fallback
+        # SMART SEARCH: Search in multiple fields (title, description, category, location)
+        # This makes search more flexible - no need to specify exact category!
         if query_lower in ["araba", "otomobil", "araç", "oto"]:
-            # Remove query, agent should use category="Otomotiv" instead
-            # But if agent didn't set category, search in title/description anyway
+            # Generic vehicle search: Check category and metadata
             if not category:
                 params["or"] = f"(title.ilike.*{query}*,description.ilike.*{query}*,category.ilike.*otom*)"
+        elif query_lower in ["ev", "daire", "emlak", "kiralık", "satılık"]:
+            # Real estate search: Check multiple fields
+            if not category:
+                params["or"] = f"(title.ilike.*{query}*,description.ilike.*{query}*,category.ilike.*emlak*,location.ilike.*{query}*)"
         else:
-            # Normal search: title veya description içinde ara (case-insensitive)
-            params["or"] = f"(title.ilike.*{query}*,description.ilike.*{query}*)"
+            # Normal search: title, description, category, location (BROADEST SEARCH)
+            params["or"] = f"(title.ilike.*{query}*,description.ilike.*{query}*,category.ilike.*{query}*,location.ilike.*{query}*)"
     
     if category:
         # Category normalization - case insensitive match
