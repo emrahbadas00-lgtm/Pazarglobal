@@ -79,6 +79,8 @@ async def search_listings(
     if category:
         # Category normalization - case insensitive partial match
         # Example: "Emlak" matches "Emlak – Kiralık Daire"
+        # IMPORTANT: When ONLY category is used (no query, no property_type), this is the ONLY filter!
+        # The listing will be found if category matches.
         params["category"] = f"ilike.*{category}*"
     
     if condition:
