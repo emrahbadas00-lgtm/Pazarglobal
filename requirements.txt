@@ -1,3 +1,6 @@
 mcp
 httpx
 python-dotenv
+supabase
+fastapi
+uvicorn[standard]
