@@ -425,24 +425,13 @@ if __name__ == "__main__":
     from starlette.responses import RedirectResponse
     from starlette.routing import Route, Mount
     
-    # FastMCP SSE app'i
+    # FastMCP SSE app'i - doğrudan kullan
     mcp_app = mcp.sse_app()
     
-    # POST /sse için redirect handler
-    async def sse_post_redirect(request):
-        return RedirectResponse(url="/sse", status_code=307)
-    
-    # Starlette app oluştur - POST ve GET destekli
-    app = Starlette(
-        routes=[
-            Route("/sse", endpoint=sse_post_redirect, methods=["POST"]),
-            Mount("/", app=mcp_app),
-        ]
-    )
-    
-    # Uvicorn'u manuel başlat
+    # Uvicorn'u doğrudan FastMCP app ile başlat
+    # FastMCP zaten /sse endpoint'ini otomatik oluşturur
     uvicorn.run(
-        app,
+        mcp_app,
         host=host,
         port=port,
         log_level="info"
