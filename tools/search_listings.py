@@ -19,20 +19,24 @@ async def search_listings(
     max_price: Optional[int] = None,
     limit: int = 10,
     metadata_type: Optional[str] = None,
+    room_count: Optional[str] = None,  # NEW: Direct metadata filter (e.g., "3+1")
+    property_type: Optional[str] = None,  # NEW: Direct metadata filter (e.g., "dubleks")
 ) -> Dict[str, Any]:
     """
     Supabase'den ilan arama.
     WhatsApp'tan: "iPhone aramak istiyorum" → query="iPhone"
     
     Args:
-        query: Arama metni (title içinde ara)
+        query: Arama metni (title, description, category, location içinde ara)
         category: Kategori filtresi
         condition: Durum filtresi ("new", "used")
         location: Lokasyon filtresi
         min_price: Minimum fiyat
         max_price: Maximum fiyat
         limit: Sonuç sayısı (default: 10)
-        metadata_type: Metadata type filter ("vehicle", "part", "accessory")
+        metadata_type: Metadata type filter ("vehicle", "part", "property")
+        room_count: Room count filter (e.g., "3+1") - searches in metadata->>'room_count'
+        property_type: Property type filter (e.g., "dubleks") - searches in metadata->>'property_type'
         
     Returns:
         İlan listesi veya hata mesajı
@@ -95,6 +99,14 @@ async def search_listings(
     if metadata_type:
         # Filter by metadata->type field (JSONB query)
         params["metadata->>type"] = f"eq.{metadata_type}"
+    
+    if room_count:
+        # Filter by metadata->room_count field (e.g., "3+1")
+        params["metadata->>room_count"] = f"eq.{room_count}"
+    
+    if property_type:
+        # Filter by metadata->property_type field (case-insensitive)
+        params["metadata->>property_type"] = f"ilike.{property_type}"
 
     headers = {
         "apikey": SUPABASE_SERVICE_KEY,
