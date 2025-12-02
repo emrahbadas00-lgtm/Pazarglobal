@@ -4,6 +4,7 @@ Update an existing listing in Supabase
 import os
 import httpx
 from typing import Optional
+from .suggest_category import suggest_category
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
@@ -79,6 +80,52 @@ async def update_listing(
             "status_code": 400,
             "error": "No fields provided to update"
         }
+    
+    # 🤖 AI-POWERED CATEGORY VALIDATION (if category is being updated)
+    if category is not None:
+        # Get current listing to validate against title/description
+        # If title/description also being updated, use new values
+        validation_title = title  # Will be None if not being updated
+        validation_description = description  # Will be None if not being updated
+        
+        # If we're updating category but not title/description, we need to fetch current values
+        if validation_title is None or validation_description is None:
+            try:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    fetch_resp = await client.get(
+                        f"{SUPABASE_URL}/rest/v1/listings?id=eq.{listing_id}&select=title,description",
+                        headers={
+                            "apikey": SUPABASE_KEY,
+                            "Authorization": f"Bearer {SUPABASE_KEY}"
+                        }
+                    )
+                    if fetch_resp.is_success and fetch_resp.json():
+                        current = fetch_resp.json()[0]
+                        validation_title = validation_title or current.get("title")
+                        validation_description = validation_description or current.get("description")
+            except Exception as e:
+                print(f"⚠️ Could not fetch current listing for validation: {e}")
+        
+        # Validate category
+        if validation_title:
+            print(f"🔍 Validating category update: {category}")
+            suggestion = await suggest_category(validation_title, validation_description, category)
+            if suggestion["success"] and not suggestion.get("is_correct", True):
+                original_category = category
+                category = suggestion["suggested_category"]
+                payload["category"] = category
+                print(f"⚠️ Category mismatch detected during update!")
+                print(f"   User selected: {original_category}")
+                print(f"   AI suggests: {category} (confidence: {suggestion['confidence']})")
+                print(f"   Auto-correcting to: {category}")
+                
+                # Store correction info in metadata
+                if metadata is None:
+                    metadata = payload.get("metadata", {})
+                if metadata:
+                    metadata["original_category"] = original_category
+                    metadata["category_corrected"] = True
+                    payload["metadata"] = metadata
     
     headers = {
         "apikey": SUPABASE_KEY,

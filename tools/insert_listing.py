@@ -4,6 +4,7 @@ import os
 from typing import Any, Dict, Optional
 
 import httpx
+from .suggest_category import suggest_category
 
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -52,6 +53,36 @@ async def insert_listing(
     print(f"🔧 Original user_id: {user_id}")
     user_id = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
     print(f"🔧 Using default test UUID: {user_id}")
+
+    # 🤖 AI-POWERED CATEGORY VALIDATION
+    # If category is missing or potentially wrong, use AI to suggest correct one
+    if not category or category.strip() == "":
+        print(f"⚠️ Category missing, using AI inference...")
+        suggestion = await suggest_category(title, description)
+        if suggestion["success"] and suggestion["suggested_category"]:
+            category = suggestion["suggested_category"]
+            print(f"✅ AI suggested category: {category} (confidence: {suggestion['confidence']})")
+        else:
+            # Fallback to generic category
+            category = "Genel"
+            print(f"⚠️ Could not infer category, using default: {category}")
+    else:
+        # Validate existing category
+        print(f"🔍 Validating category: {category}")
+        suggestion = await suggest_category(title, description, category)
+        if suggestion["success"] and not suggestion.get("is_correct", True):
+            original_category = category
+            category = suggestion["suggested_category"]
+            print(f"⚠️ Category mismatch detected!")
+            print(f"   User selected: {original_category}")
+            print(f"   AI suggests: {category} (confidence: {suggestion['confidence']})")
+            print(f"   Auto-correcting to: {category}")
+            
+            # Store original category in metadata for audit
+            if metadata is None:
+                metadata = {}
+            metadata["original_category"] = original_category
+            metadata["category_corrected"] = True
 
     url = f"{SUPABASE_URL}/rest/v1/listings"
 
