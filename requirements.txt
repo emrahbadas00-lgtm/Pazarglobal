@@ -4,3 +4,4 @@ python-dotenv
 supabase
 fastapi
 uvicorn[standard]
+sse-starlette
