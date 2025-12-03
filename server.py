@@ -8,7 +8,6 @@ import asyncio
 from typing import Optional, Dict, Any
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse, JSONResponse
-from sse_starlette.sse import EventSourceResponse
 
 from tools.clean_price import clean_price as clean_price_core
 from tools.insert_listing import insert_listing as insert_listing_core
@@ -163,33 +162,36 @@ async def sse_endpoint(request: Request):
     print(f"📡 SSE connection from: {request.client.host}")
     
     async def event_generator():
-        # Send initial connection message
-        yield {
-            "event": "endpoint",
-            "data": json.dumps({
-                "jsonrpc": "2.0",
-                "method": "endpoint",
-                "params": {
-                    "endpoint": "/messages"
-                }
-            })
-        }
+        # Send initial endpoint event (MCP protocol handshake)
+        endpoint_message = json.dumps({
+            "jsonrpc": "2.0",
+            "method": "endpoint",
+            "params": {
+                "endpoint": "/messages"
+            }
+        })
+        yield f"event: endpoint\ndata: {endpoint_message}\n\n"
         
-        # Keep connection alive
+        # Keep connection alive with periodic pings
         while True:
             # Check if client disconnected
             if await request.is_disconnected():
+                print("📡 Client disconnected from SSE")
                 break
                 
-            # Send ping to keep connection alive
-            yield {
-                "event": "ping",
-                "data": ""
-            }
-            
+            # Send keepalive ping every 30 seconds
+            yield f": keepalive\n\n"
             await asyncio.sleep(30)
     
-    return EventSourceResponse(event_generator())
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"  # Disable nginx buffering
+        }
+    )
 
 
 @app.post("/messages")
