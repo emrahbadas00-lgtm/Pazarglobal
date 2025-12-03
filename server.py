@@ -419,30 +419,73 @@ if __name__ == "__main__":
     # print(f"🔐 Security Tools: verify_pin, check_session, check_rate_limit, log_audit, register_user_pin, get_user_by_phone")
     print(f"🌐 SSE Endpoint: http://{host}:{port}/sse")
     
-    # FastMCP SSE app'i - Railway için allowed_hosts="*" ile oluştur
+    # FastMCP'nin host validation'ı Railway ile çalışmıyor
+    # FastAPI ile manuel SSE endpoint oluştur
+    from fastapi import FastAPI, Request
+    from starlette.responses import StreamingResponse
     import uvicorn
     
-    # FastMCP'nin sse_app() metodunu allowed_hosts ile çağır
-    # Railway proxy her istek için farklı host header gönderebilir
-    try:
-        mcp_app = mcp.sse_app(allowed_hosts=["*"])
-    except TypeError:
-        # Eski FastMCP versiyonu allowed_hosts desteklemiyor
-        # O zaman ASGI middleware ile bypass et
-        base_app = mcp.sse_app()
-        
-        async def bypass_host_check(scope, receive, send):
-            # Host validation'ı atla - Railway için
-            if scope["type"] == "http":
-                # Railway internal hostname'ini kabul et
-                scope["server"] = ("0.0.0.0", port)
-            await base_app(scope, receive, send)
-        
-        mcp_app = bypass_host_check
+    app = FastAPI()
     
-    # Uvicorn'u doğrudan FastMCP app ile başlat
+    # FastMCP SSE app'ini al
+    mcp_sse_app = mcp.sse_app()
+    
+    @app.get("/sse")
+    @app.post("/sse")
+    async def sse_proxy(request: Request):
+        """
+        FastMCP SSE endpoint'ine proxy - host validation bypass
+        """
+        # ASGI scope'u hazırla
+        scope = dict(request.scope)
+        
+        # Host header'ı düzelt - Railway proxy için
+        scope["server"] = ("0.0.0.0", port)
+        scope["headers"] = [
+            (k, v) for k, v in scope.get("headers", [])
+            if k != b"host"
+        ]
+        scope["headers"].append((b"host", f"0.0.0.0:{port}".encode()))
+        
+        # Request body'yi al
+        body = await request.body()
+        
+        # ASGI receive callable
+        async def receive():
+            return {
+                "type": "http.request",
+                "body": body,
+                "more_body": False
+            }
+        
+        # Response'u topla
+        response_data = {
+            "status": 200,
+            "headers": {},
+            "body": b""
+        }
+        
+        async def send(message):
+            if message["type"] == "http.response.start":
+                response_data["status"] = message["status"]
+                response_data["headers"] = dict(message.get("headers", []))
+            elif message["type"] == "http.response.body":
+                response_data["body"] += message.get("body", b"")
+        
+        # FastMCP app'i çağır
+        await mcp_sse_app(scope, receive, send)
+        
+        # SSE response dön
+        return StreamingResponse(
+            iter([response_data["body"]]),
+            status_code=response_data["status"],
+            headers=response_data["headers"],
+            media_type="text/event-stream"
+        )
+    
+    # Uvicorn'u FastAPI ile başlat
     uvicorn.run(
-        mcp_app,
+        app,
         host=host,
         port=port,
         log_level="info"
