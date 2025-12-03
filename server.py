@@ -421,12 +421,22 @@ if __name__ == "__main__":
     
     # FastMCP SSE app'i - doğrudan kullan (Starlette wrapper gerekmez)
     import uvicorn
+    
+    # Railway proxy'si için allowed_hosts ekle
     mcp_app = mcp.sse_app()
+    
+    # ASGI app'i wrap et - Railway'nin farklı host header'larını kabul et
+    async def app_with_host_override(scope, receive, send):
+        # Railway internal routing için host validation'ı bypass et
+        if scope["type"] == "http":
+            # Railway'nin internal ve external host'larını accept et
+            scope["server"] = (host, port)
+        return await mcp_app(scope, receive, send)
     
     # Uvicorn'u doğrudan FastMCP app ile başlat
     # FastMCP zaten /sse endpoint'ini otomatik oluşturur
     uvicorn.run(
-        mcp_app,
+        app_with_host_override,
         host=host,
         port=port,
         log_level="info"
