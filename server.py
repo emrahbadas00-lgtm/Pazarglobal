@@ -163,6 +163,7 @@ async def sse_endpoint(request: Request):
     
     async def event_generator():
         # Send initial endpoint event (MCP protocol handshake)
+        # Event type MUST be "message" for MCP SDK
         endpoint_message = json.dumps({
             "jsonrpc": "2.0",
             "method": "endpoint",
@@ -170,7 +171,11 @@ async def sse_endpoint(request: Request):
                 "endpoint": "/messages"
             }
         })
-        yield f"event: endpoint\ndata: {endpoint_message}\n\n"
+        
+        # MCP SDK expects 'message' event type, not 'endpoint'
+        yield f"event: message\ndata: {endpoint_message}\n\n"
+        
+        print(f"✅ Sent endpoint message to client")
         
         # Keep connection alive with periodic pings
         while True:
