@@ -419,24 +419,30 @@ if __name__ == "__main__":
     # print(f"🔐 Security Tools: verify_pin, check_session, check_rate_limit, log_audit, register_user_pin, get_user_by_phone")
     print(f"🌐 SSE Endpoint: http://{host}:{port}/sse")
     
-    # FastMCP SSE app'i - doğrudan kullan (Starlette wrapper gerekmez)
+    # FastMCP SSE app'i - Railway için allowed_hosts="*" ile oluştur
     import uvicorn
     
-    # Railway proxy'si için allowed_hosts ekle
-    mcp_app = mcp.sse_app()
-    
-    # ASGI app'i wrap et - Railway'nin farklı host header'larını kabul et
-    async def app_with_host_override(scope, receive, send):
-        # Railway internal routing için host validation'ı bypass et
-        if scope["type"] == "http":
-            # Railway'nin internal ve external host'larını accept et
-            scope["server"] = (host, port)
-        return await mcp_app(scope, receive, send)
+    # FastMCP'nin sse_app() metodunu allowed_hosts ile çağır
+    # Railway proxy her istek için farklı host header gönderebilir
+    try:
+        mcp_app = mcp.sse_app(allowed_hosts=["*"])
+    except TypeError:
+        # Eski FastMCP versiyonu allowed_hosts desteklemiyor
+        # O zaman ASGI middleware ile bypass et
+        base_app = mcp.sse_app()
+        
+        async def bypass_host_check(scope, receive, send):
+            # Host validation'ı atla - Railway için
+            if scope["type"] == "http":
+                # Railway internal hostname'ini kabul et
+                scope["server"] = ("0.0.0.0", port)
+            await base_app(scope, receive, send)
+        
+        mcp_app = bypass_host_check
     
     # Uvicorn'u doğrudan FastMCP app ile başlat
-    # FastMCP zaten /sse endpoint'ini otomatik oluşturur
     uvicorn.run(
-        app_with_host_override,
+        mcp_app,
         host=host,
         port=port,
         log_level="info"
