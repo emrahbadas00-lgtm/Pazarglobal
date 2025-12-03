@@ -418,42 +418,44 @@ if __name__ == "__main__":
     print(f"🔧 Listing Tools: clean_price_tool, insert_listing_tool, search_listings_tool, update_listing_tool, delete_listing_tool, list_user_listings_tool")
     # print(f"🔐 Security Tools: verify_pin, check_session, check_rate_limit, log_audit, register_user_pin, get_user_by_phone")
     print(f"🌐 SSE Endpoint: http://{host}:{port}/sse")
+    print("⚠️  Host validation DISABLED for Railway compatibility")
     
-    # FastMCP'nin host validation'ı Railway ile çalışmıyor
-    # Direkt uvicorn ile FastMCP app'i başlat - host check DISABLED
+    # CRITICAL FIX: Monkey-patch FastMCP's host validation
+    # Railway's proxy infrastructure requires this
+    import mcp.server.sse
+    
+    # Store original function
+    _original_connect_sse = mcp.server.sse.connect_sse
+    
+    # Create patched version that skips host validation
+    async def _patched_connect_sse(scope, receive, send):
+        """
+        Patched version of connect_sse that bypasses host validation.
+        Necessary for Railway deployment where proxy sends internal hostnames.
+        """
+        from contextlib import asynccontextmanager
+        from mcp.server.sse import SseServerTransport
+        
+        @asynccontextmanager
+        async def _inner():
+            # Create transport directly, bypassing validation
+            transport = SseServerTransport("/messages", scope, receive, send)
+            try:
+                yield transport
+            finally:
+                await transport.close()
+        
+        return _inner()
+    
+    # Replace the function
+    mcp.server.sse.connect_sse = _patched_connect_sse
+    
+    # Now get the app - it will use our patched function
     import uvicorn
-    
-    # FastMCP SSE app'ini al
     mcp_sse_app = mcp.sse_app()
     
-    # ASGI middleware - host validation'ı bypass et
-    async def no_host_check_middleware(scope, receive, send):
-        """
-        Railway proxy için host check'i bypass eden middleware
-        """
-        if scope["type"] == "http":
-            # Railway internal host'u kabul et - host validation KAPALI
-            # FastMCP'nin host check'ini atla
-            original_headers = scope.get("headers", [])
-            
-            # Tüm host header'larını kaldır, Railway domain'i ekle
-            new_headers = [
-                (k, v) for k, v in original_headers
-                if k.lower() != b"host"
-            ]
-            
-            # Railway public domain'i host olarak ekle
-            railway_domain = b"pazarglobal-production.up.railway.app"
-            new_headers.append((b"host", railway_domain))
-            
-            scope["headers"] = new_headers
-            scope["server"] = ("pazarglobal-production.up.railway.app", 443)
-        
-        await mcp_sse_app(scope, receive, send)
-    
-    # Uvicorn'u middleware ile başlat
     uvicorn.run(
-        no_host_check_middleware,
+        mcp_sse_app,
         host=host,
         port=port,
         log_level="info"
