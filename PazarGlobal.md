@@ -1287,6 +1287,80 @@ WHERE id = $1 AND user_id = $2;
 
 ---
 
+### Phase 3.5: Premium Listing Feature (Q1-Q2 2026)
+
+**Status:** 🟡 High Priority - Monetization Strategy
+
+#### Özellikler:
+- Premium İlan Sıralaması (Premium listings appear first in search results)
+- Ücretli Üyelik Sistemi (Paid membership system)
+- Premium Badge & Highlighting (⭐ visual indicators)
+- Stratejik Teşvik Mekanizması (Strategic conversion triggers)
+
+#### Why This Works:
+**Current pagination system (5 listings at a time) creates perfect foundation:**
+- Small batches make premium visibility clear
+- "Ask first" approach shows premium stats before display
+- Users immediately see competitive advantage
+- Natural conversion trigger: "Why is my listing never in top 5?"
+
+#### Implementation:
+
+**1. Database Schema:**
+```sql
+ALTER TABLE listings ADD COLUMN is_premium BOOLEAN DEFAULT FALSE;
+ALTER TABLE listings ADD COLUMN premium_expires_at TIMESTAMP;
+CREATE INDEX idx_listings_premium ON listings(is_premium, created_at);
+```
+
+**2. search_listings_tool Enhancement:**
+```python
+@function_tool
+async def search_listings_tool(
+    query: Optional[str] = None,
+    category: Optional[str] = None,
+    prioritize_premium: bool = True,  # NEW: Default True
+    limit: int = 5
+):
+    # ORDER BY: is_premium DESC, created_at DESC
+    # Premium listings always appear first
+```
+
+**3. SearchAgent Display Format:**
+```
+⭐ PREMIUM #1: BMW 520i [2024] - ÖNE ÇIKAN İLAN
+⭐ PREMIUM #2: Mercedes C200 [2023] - ÖNE ÇIKAN İLAN
+#3: Renault Clio [2015]
+#4: Ford Focus [2018]
+#5: Opel Astra [2017]
+
+💡 ⭐ Premium ilanlar listenin başında görünür!
+   İlanınızı öne çıkarmak için Premium üyelik edinin.
+```
+
+**4. UX Flow Example:**
+```
+User: "Araba arıyorum"
+Agent: "100 ilan bulundu (12 premium). 5 göstereyim mi?"
+User: "Göster"
+Agent: [Shows 5 premium listings]
+      "💡 Premium ilanlar öncelikli gösteriliyor!
+          Daha fazla için 'daha fazla' yazın (kalan 88 normal + 7 premium)"
+```
+
+#### Monetization Psychology:
+- Normal user: "Hep aynı şeyler listenin başında" → sees value
+- Premium user: "İlanım hep ilk 5'te!" → immediate ROI
+- Conversion trigger: "2 premium var ama 100 ilan → ilanımı neden kimse görmüyor?"
+- Transparent competition: "12 premium ilan" shows market dynamics
+
+#### Dependencies:
+- Phase 2 (User Identity) must be complete for user management
+- Phase 3 (Listing Management) for listing operations
+- Current pagination system (already implemented) ✅
+
+---
+
 ### Phase 4: Payment Integration (Q2 2026)
 
 **Status:** 🟢 Medium Priority
@@ -1297,6 +1371,7 @@ WHERE id = $1 AND user_id = $2;
 - Escrow System (optional)
 - Payment Webhooks
 - Refund Management
+- **Premium Membership Payments** (linked to Phase 3.5)
 
 #### PaymentAgent:
 ```
